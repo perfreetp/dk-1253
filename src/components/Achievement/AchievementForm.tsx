@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { X, Upload } from 'lucide-react';
 import type { Achievement, Rarity } from '@/types';
 import { useAppStore } from '@/store/useAppStore';
@@ -23,7 +23,7 @@ export default function AchievementForm({
   onClose,
   onSubmit,
 }: AchievementFormProps) {
-  const { games, addMedia, settings } = useAppStore();
+  const { games, addMedia, settings, media } = useAppStore();
   const [formData, setFormData] = useState({
     gameId: achievement?.gameId || '',
     name: achievement?.name || '',
@@ -35,8 +35,17 @@ export default function AchievementForm({
     notes: achievement?.notes || '',
     isPinned: achievement?.isPinned || false,
     isPublic: achievement?.isPublic ?? settings.defaultPublic,
-    media: achievement?.media || [],
+    newMedia: [] as Array<{ id: string; type: 'image' | 'video'; url: string; createdAt: string }>,
   });
+  
+  const existingMedia = useMemo(() => {
+    if (!achievement) return [];
+    return media.filter(m => m.relatedAchievementId === achievement.id);
+  }, [achievement, media]);
+  
+  const allMedia = useMemo(() => {
+    return [...existingMedia, ...formData.newMedia];
+  }, [existingMedia, formData.newMedia]);
 
   const [showGameSelect, setShowGameSelect] = useState(false);
 
@@ -48,7 +57,7 @@ export default function AchievementForm({
       const reader = new FileReader();
       reader.onload = (event) => {
         const url = event.target?.result as string;
-        const newMedia = {
+        const newMediaItem = {
           id: generateId(),
           type: 'image' as const,
           url,
@@ -56,7 +65,7 @@ export default function AchievementForm({
         };
         setFormData((prev) => ({
           ...prev,
-          media: [...prev.media, newMedia],
+          newMedia: [...prev.newMedia, newMediaItem],
         }));
       };
       reader.readAsDataURL(file);
@@ -66,7 +75,7 @@ export default function AchievementForm({
   const handleRemoveMedia = (mediaId: string) => {
     setFormData((prev) => ({
       ...prev,
-      media: prev.media.filter((m) => m.id !== mediaId),
+      newMedia: prev.newMedia.filter((m) => m.id !== mediaId),
     }));
   };
 
@@ -80,10 +89,13 @@ export default function AchievementForm({
 
     const achievementId = achievement?.id || generateId();
     
-    formData.media.forEach((media) => {
+    formData.newMedia.forEach((media) => {
+      const mediaId = media.id || generateId();
       addMedia({
-        ...media,
-        id: media.id || generateId(),
+        id: mediaId,
+        type: media.type,
+        url: media.url,
+        createdAt: media.createdAt,
         relatedAchievementId: achievementId,
       });
     });
@@ -97,7 +109,7 @@ export default function AchievementForm({
       rarity: formData.rarity,
       isPinned: formData.isPinned,
       isPublic: formData.isPublic,
-      media: formData.media,
+      media: allMedia,
       notes: formData.notes || undefined,
     };
 
@@ -277,22 +289,29 @@ export default function AchievementForm({
               </label>
             </div>
 
-            {formData.media.length > 0 && (
+            {allMedia.length > 0 && (
               <div className="mt-4 grid grid-cols-4 gap-2">
-                {formData.media.map((media) => (
+                {allMedia.map((media) => (
                   <div key={media.id} className="relative group">
                     <img
                       src={media.url}
                       alt=""
                       className="w-full h-20 object-cover rounded-lg"
                     />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveMedia(media.id)}
-                      className="absolute top-1 right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-4 h-4 text-white" />
-                    </button>
+                    {existingMedia.some(m => m.id === media.id) && (
+                      <div className="absolute top-1 left-1 bg-neon-cyan text-cyber-darker text-xs px-1 rounded">
+                        已保存
+                      </div>
+                    )}
+                    {!existingMedia.some(m => m.id === media.id) && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMedia(media.id)}
+                        className="absolute top-1 right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-4 h-4 text-white" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
