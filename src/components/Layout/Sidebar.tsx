@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { Trophy, Gamepad2, Image, Users, Settings } from 'lucide-react';
+import { Trophy, User, Gamepad2, Image, Users, Settings } from 'lucide-react';
 
 export default function Sidebar() {
   const navItems = [
     { to: '/', icon: Trophy, label: '成就墙' },
+    { to: '/profile', icon: User, label: '个人主页' },
     { to: '/games', icon: Gamepad2, label: '游戏库' },
     { to: '/media', icon: Image, label: '截图详情' },
     { to: '/friends', icon: Users, label: '好友浏览' },

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AppState, Game, Achievement, Media, AppSettings, UserProfile, Comment } from '@/types';
+import type { AppState, Game, Achievement, Media, AppSettings, UserProfile, Comment, FriendPost } from '@/types';
 
 interface AppStore extends AppState {
   setUser: (user: UserProfile) => void;
@@ -16,6 +16,7 @@ interface AppStore extends AppState {
   deleteMedia: (id: string) => void;
   likeFriendPost: (id: string) => void;
   addComment: (postId: string, comment: Comment) => void;
+  addFriendPost: (post: FriendPost) => void;
   toggleBookmarkFriend: (friendId: string) => void;
   updateSettings: (settings: Partial<AppSettings>) => void;
   getGameById: (id: string) => Game | undefined;
@@ -60,10 +61,17 @@ export const useAppStore = create<AppStore>()(
         })),
 
       deleteGame: (id) =>
-        set((state) => ({
-          games: state.games.filter((g) => g.id !== id),
-          achievements: state.achievements.filter((a) => a.gameId !== id),
-        })),
+        set((state) => {
+          const gameAchievements = state.achievements.filter((a) => a.gameId === id);
+          const achievementIds = gameAchievements.map((a) => a.id);
+          return {
+            games: state.games.filter((g) => g.id !== id),
+            achievements: state.achievements.filter((a) => a.gameId !== id),
+            media: state.media.filter((m) => 
+              !achievementIds.includes(m.relatedAchievementId || '')
+            ),
+          };
+        }),
 
       addAchievement: (achievement) =>
         set((state) => ({ achievements: [...state.achievements, achievement] })),
@@ -78,6 +86,7 @@ export const useAppStore = create<AppStore>()(
       deleteAchievement: (id) =>
         set((state) => ({
           achievements: state.achievements.filter((a) => a.id !== id),
+          media: state.media.filter((m) => m.relatedAchievementId !== id),
         })),
 
       togglePinAchievement: (id) =>
@@ -117,6 +126,17 @@ export const useAppStore = create<AppStore>()(
             p.id === postId ? { ...p, comments: [...p.comments, comment] } : p
           ),
         })),
+
+      addFriendPost: (post) =>
+        set((state) => {
+          const existingIndex = state.friendPosts.findIndex((p) => p.id === post.id);
+          if (existingIndex >= 0) {
+            const updated = [...state.friendPosts];
+            updated[existingIndex] = post;
+            return { friendPosts: updated };
+          }
+          return { friendPosts: [...state.friendPosts, post] };
+        }),
 
       toggleBookmarkFriend: (friendId) =>
         set((state) => ({

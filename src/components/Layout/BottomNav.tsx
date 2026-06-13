@@ -1,13 +1,13 @@
 import { NavLink } from 'react-router-dom';
-import { Trophy, Gamepad2, Image, Users, Settings } from 'lucide-react';
+import { Trophy, User, Gamepad2, Image, Users } from 'lucide-react';
 
 export default function BottomNav() {
   const navItems = [
     { to: '/', icon: Trophy, label: '成就' },
+    { to: '/profile', icon: User, label: '主页' },
     { to: '/games', icon: Gamepad2, label: '游戏' },
     { to: '/media', icon: Image, label: '截图' },
     { to: '/friends', icon: Users, label: '好友' },
-    { to: '/settings', icon: Settings, label: '设置' },
   ];
 
   return (

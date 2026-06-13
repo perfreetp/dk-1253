@@ -4,11 +4,11 @@ import { useAppStore } from '@/store/useAppStore';
 import { useFilteredAchievements } from '@/hooks/useData';
 import { getYearsRange } from '@/utils/dateUtils';
 import { exportToImage } from '@/utils/exportUtils';
-import type { Achievement, Platform, Rarity } from '@/types';
+import type { Achievement, Platform, Rarity, Media } from '@/types';
 import AchievementCard from '@/components/Achievement/AchievementCard';
 import AchievementModal from '@/components/Achievement/AchievementModal';
 import AchievementForm from '@/components/Achievement/AchievementForm';
-import ExportCard from '@/components/Export/ExportCard';
+import ExportCard, { ExportCardCustomizer } from '@/components/Export/ExportCard';
 
 export default function AchievementWall() {
   const { achievements, addAchievement, updateAchievement } = useAppStore();
@@ -21,6 +21,9 @@ export default function AchievementWall() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [showExportPreview, setShowExportPreview] = useState(false);
+  const [showExportCustomizer, setShowExportCustomizer] = useState(false);
+  const [exportSelectedAchievements, setExportSelectedAchievements] = useState<Achievement[]>([]);
+  const [exportSelectedMedia, setExportSelectedMedia] = useState<Media[]>([]);
 
   const filteredAchievements = useFilteredAchievements(
     platformFilter,
@@ -49,6 +52,13 @@ export default function AchievementWall() {
       alert('导出失败');
       setShowExportPreview(false);
     }
+  };
+
+  const handleExportWithSelection = (selectedAchievements: Achievement[], selectedMedia: Media[]) => {
+    setExportSelectedAchievements(selectedAchievements);
+    setExportSelectedMedia(selectedMedia);
+    setShowExportCustomizer(false);
+    setShowExportPreview(true);
   };
 
   const handleSubmit = (achievement: Achievement) => {
@@ -83,7 +93,7 @@ export default function AchievementWall() {
             </button>
             {achievements.length > 0 && (
               <button
-                onClick={handleExport}
+                onClick={() => setShowExportCustomizer(true)}
                 className="btn-cyber-outline flex items-center gap-2 text-neon-purple border-neon-purple hover:bg-neon-purple hover:text-white"
               >
                 <Download className="w-4 h-4" />
@@ -251,6 +261,28 @@ export default function AchievementWall() {
         />
       )}
 
+      {showExportCustomizer && (
+        <div className="modal-overlay" onClick={() => setShowExportCustomizer(false)}>
+          <div
+            className="fixed inset-4 lg:inset-auto lg:left-1/2 lg:top-1/2 lg:transform lg:-translate-x-1/2 lg:-translate-y-1/2 lg:w-full lg:max-w-4xl lg:max-h-[90vh] overflow-y-auto bg-cyber-darker rounded-2xl z-50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-cyber-darker border-b border-white/10 p-4 flex items-center justify-between">
+              <h3 className="text-white font-semibold">自定义导出内容</h3>
+              <button
+                onClick={() => setShowExportCustomizer(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              <ExportCardCustomizer onExport={handleExportWithSelection} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {showExportPreview && (
         <div className="modal-overlay" onClick={() => setShowExportPreview(false)}>
           <div
@@ -268,7 +300,7 @@ export default function AchievementWall() {
                 </button>
               </div>
               <div className="max-h-[70vh] overflow-y-auto scrollbar-cyber">
-                <ExportCard />
+                <ExportCard selectedAchievements={exportSelectedAchievements} selectedMedia={exportSelectedMedia} />
               </div>
               <div className="bg-cyber-darker rounded-2xl p-4 mt-4 flex justify-center gap-3">
                 <button
@@ -285,7 +317,7 @@ export default function AchievementWall() {
       )}
 
       <div className="hidden">
-        <ExportCard />
+        <ExportCard selectedAchievements={exportSelectedAchievements} selectedMedia={exportSelectedMedia} />
       </div>
     </div>
   );

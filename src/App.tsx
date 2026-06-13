@@ -6,6 +6,7 @@ import Sidebar from '@/components/Layout/Sidebar';
 import BottomNav from '@/components/Layout/BottomNav';
 import TopNav from '@/components/Layout/TopNav';
 import AchievementWall from '@/pages/AchievementWall';
+import ProfileOverview from '@/pages/ProfileOverview';
 import GameLibrary from '@/pages/GameLibrary';
 import MediaGallery from '@/pages/MediaGallery';
 import FriendBrowse from '@/pages/FriendBrowse';
@@ -39,6 +40,7 @@ export default function App() {
           <main className="flex-1 overflow-y-auto scrollbar-cyber pb-20 lg:pb-0">
             <Routes>
               <Route path="/" element={<AchievementWall />} />
+              <Route path="/profile" element={<ProfileOverview />} />
               <Route path="/games" element={<GameLibrary />} />
               <Route path="/media" element={<MediaGallery />} />
               <Route path="/friends" element={<FriendBrowse />} />

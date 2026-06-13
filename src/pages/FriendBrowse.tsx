@@ -3,13 +3,14 @@ import { Heart, MessageCircle, Bookmark, Send, Filter } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatTimeAgo, generateId } from '@/utils/dateUtils';
 import { mockFriendPosts } from '@/data/mockData';
-import type { Comment, Achievement, Media } from '@/types';
+import type { Comment, Achievement, Media, FriendPost } from '@/types';
 
 export default function FriendBrowse() {
   const {
     friendPosts,
     likeFriendPost,
     addComment,
+    addFriendPost,
     bookmarkedFriends,
     toggleBookmarkFriend,
     user,
@@ -20,27 +21,36 @@ export default function FriendBrowse() {
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false);
 
   const displayPosts = useMemo(() => {
-    let posts = friendPosts.length > 0 ? friendPosts : mockFriendPosts;
+    const allPosts = [...friendPosts, ...mockFriendPosts];
     
     if (showBookmarkedOnly) {
-      posts = posts.filter((post) => bookmarkedFriends.includes(post.friendId));
+      return allPosts
+        .filter((post) => bookmarkedFriends.includes(post.friendId))
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
     
-    return posts.sort(
+    return allPosts.sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }, [friendPosts, showBookmarkedOnly, bookmarkedFriends]);
 
-  const handleLike = (postId: string) => {
-    if (friendPosts.some((p) => p.id === postId)) {
-      likeFriendPost(postId);
+  const handleLike = (post: FriendPost) => {
+    const isFromStore = friendPosts.some((p) => p.id === post.id);
+    
+    if (isFromStore) {
+      likeFriendPost(post.id);
     } else {
-      console.log('Liked (mock):', postId);
+      const updatedPost: FriendPost = {
+        ...post,
+        isLiked: !post.isLiked,
+        likes: post.isLiked ? post.likes - 1 : post.likes + 1,
+      };
+      addFriendPost(updatedPost);
     }
   };
 
-  const handleComment = (postId: string) => {
-    const commentText = newComment[postId]?.trim();
+  const handleComment = (post: FriendPost) => {
+    const commentText = newComment[post.id]?.trim();
     if (!commentText) return;
 
     const newCommentObj: Comment = {
@@ -51,13 +61,19 @@ export default function FriendBrowse() {
       createdAt: new Date().toISOString(),
     };
 
-    if (friendPosts.some((p) => p.id === postId)) {
-      addComment(postId, newCommentObj);
+    const isFromStore = friendPosts.some((p) => p.id === post.id);
+    
+    if (isFromStore) {
+      addComment(post.id, newCommentObj);
     } else {
-      console.log('Comment (mock):', postId, commentText);
+      const updatedPost: FriendPost = {
+        ...post,
+        comments: [...post.comments, newCommentObj],
+      };
+      addFriendPost(updatedPost);
     }
 
-    setNewComment((prev) => ({ ...prev, [postId]: '' }));
+    setNewComment((prev) => ({ ...prev, [post.id]: '' }));
     setShowComment(null);
   };
 
@@ -66,6 +82,21 @@ export default function FriendBrowse() {
   };
 
   const isBookmarked = (friendId: string) => bookmarkedFriends.includes(friendId);
+
+  const getPostLikes = (post: FriendPost) => {
+    const storePost = friendPosts.find((p) => p.id === post.id);
+    return storePost ? storePost.likes : post.likes;
+  };
+
+  const getPostIsLiked = (post: FriendPost) => {
+    const storePost = friendPosts.find((p) => p.id === post.id);
+    return storePost ? storePost.isLiked : post.isLiked;
+  };
+
+  const getPostComments = (post: FriendPost) => {
+    const storePost = friendPosts.find((p) => p.id === post.id);
+    return storePost ? storePost.comments : post.comments;
+  };
 
   return (
     <div className="p-6">
@@ -101,9 +132,9 @@ export default function FriendBrowse() {
 
       <div className="space-y-6">
         {displayPosts.map((post, index) => {
-          const isLiked = friendPosts.find((p) => p.id === post.id)?.isLiked ?? post.isLiked;
-          const likes = friendPosts.find((p) => p.id === post.id)?.likes ?? post.likes;
-          const comments = friendPosts.find((p) => p.id === post.id)?.comments ?? post.comments;
+          const isLiked = getPostIsLiked(post);
+          const likes = getPostLikes(post);
+          const comments = getPostComments(post);
 
           return (
             <div
@@ -150,7 +181,7 @@ export default function FriendBrowse() {
 
               <div className="flex items-center gap-6 mt-4 pt-4 border-t border-white/10">
                 <button
-                  onClick={() => handleLike(post.id)}
+                  onClick={() => handleLike(post)}
                   className={`flex items-center gap-2 transition-colors ${
                     isLiked ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
                   }`}
@@ -179,7 +210,7 @@ export default function FriendBrowse() {
                   {comments.map((comment) => (
                     <div key={comment.id} className="flex gap-3">
                       <img
-                        src={comment.avatar}
+                        src={comment.avatar || 'https://via.placeholder.com/32'}
                         alt={comment.author}
                         className="w-8 h-8 rounded-full object-cover"
                       />
@@ -213,14 +244,14 @@ export default function FriendBrowse() {
                         }
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
-                            handleComment(post.id);
+                            handleComment(post);
                           }
                         }}
                         placeholder="写下你的评论..."
                         className="input-cyber flex-1 text-sm py-2"
                       />
                       <button
-                        onClick={() => handleComment(post.id)}
+                        onClick={() => handleComment(post)}
                         className="btn-cyber px-4"
                       >
                         <Send className="w-4 h-4" />
@@ -237,7 +268,7 @@ export default function FriendBrowse() {
       {displayPosts.length === 0 && (
         <div className="text-center py-16">
           <div className="text-6xl mb-4">
-            {showBookmarkedOnly ? '�' : '�👥'}
+            {showBookmarkedOnly ? '🔖' : '�'}
           </div>
           <h3 className="text-xl font-semibold text-white mb-2">
             {showBookmarkedOnly ? '暂无收藏好友动态' : '暂无好友动态'}

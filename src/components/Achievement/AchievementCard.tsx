@@ -10,8 +10,9 @@ interface AchievementCardProps {
 }
 
 export default function AchievementCard({ achievement, onClick }: AchievementCardProps) {
-  const { getGameById } = useAppStore();
+  const { getGameById, media } = useAppStore();
   const game = getGameById(achievement.gameId);
+  const achievementMedia = media.filter((m) => m.relatedAchievementId === achievement.id);
 
   return (
     <div
@@ -67,9 +68,9 @@ export default function AchievementCard({ achievement, onClick }: AchievementCar
             </div>
 
             <div className="flex items-center gap-2">
-              {achievement.media.length > 0 && (
+              {achievementMedia.length > 0 && (
                 <span className="text-neon-cyan">
-                  {achievement.media.length} 个附件
+                  {achievementMedia.length} 个附件
                 </span>
               )}
               {achievement.notes && (
