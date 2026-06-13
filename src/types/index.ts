@@ -64,6 +64,7 @@ export interface AppSettings {
   theme: 'dark' | 'light';
   defaultPlatform: Platform | 'all';
   defaultRarity: Rarity | 'all';
+  defaultPublic: boolean;
   exportIncludeStats: boolean;
 }
 

@@ -35,6 +35,7 @@ const defaultSettings: AppSettings = {
   theme: 'dark',
   defaultPlatform: 'all',
   defaultRarity: 'all',
+  defaultPublic: true,
   exportIncludeStats: true,
 };
 

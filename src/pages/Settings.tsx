@@ -7,17 +7,18 @@ import {
   User,
   Shield,
   Palette,
+  Check,
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
+import { useThemeStore } from '@/store/useThemeStore';
 
 export default function Settings() {
   const { user, settings, updateSettings, achievements, games } = useAppStore();
+  const { theme, setTheme } = useThemeStore();
   const [showExportPreview, setShowExportPreview] = useState(false);
 
-  const handleThemeToggle = () => {
-    updateSettings({
-      theme: settings.theme === 'dark' ? 'light' : 'dark',
-    });
+  const handleThemeChange = (newTheme: 'dark' | 'light') => {
+    setTheme(newTheme);
   };
 
   const handleExportAll = () => {
@@ -111,29 +112,39 @@ export default function Settings() {
             <h2 className="font-semibold text-white">外观</h2>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="space-y-4">
             <div>
-              <p className="text-white font-medium mb-1">主题模式</p>
-              <p className="text-sm text-gray-400">
-                {settings.theme === 'dark' ? '深色模式' : '浅色模式'}
+              <label className="text-sm text-gray-400 mb-3 block">主题模式</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => handleThemeChange('dark')}
+                  className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
+                    theme === 'dark'
+                      ? 'border-neon-cyan bg-neon-cyan/10 text-neon-cyan'
+                      : 'border-white/10 text-gray-300 hover:border-white/30'
+                  }`}
+                >
+                  <Moon className="w-6 h-6" />
+                  <span className="text-sm font-medium">深色模式</span>
+                  {theme === 'dark' && <Check className="w-4 h-4" />}
+                </button>
+                <button
+                  onClick={() => handleThemeChange('light')}
+                  className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
+                    theme === 'light'
+                      ? 'border-neon-cyan bg-neon-cyan/10 text-neon-cyan'
+                      : 'border-white/10 text-gray-300 hover:border-white/30'
+                  }`}
+                >
+                  <Sun className="w-6 h-6" />
+                  <span className="text-sm font-medium">浅色模式</span>
+                  {theme === 'light' && <Check className="w-4 h-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                当前：{theme === 'dark' ? '深色模式' : '浅色模式'}
               </p>
             </div>
-            <button
-              onClick={handleThemeToggle}
-              className="relative w-16 h-8 rounded-full bg-cyber-darker border border-white/20 transition-colors hover:border-neon-cyan"
-            >
-              <div
-                className={`absolute top-1 w-6 h-6 rounded-full bg-gradient-to-r from-neon-cyan to-neon-purple transition-transform flex items-center justify-center ${
-                  settings.theme === 'dark' ? 'left-1' : 'left-9'
-                }`}
-              >
-                {settings.theme === 'dark' ? (
-                  <Moon className="w-3 h-3 text-cyber-darker" />
-                ) : (
-                  <Sun className="w-3 h-3 text-cyber-darker" />
-                )}
-              </div>
-            </button>
           </div>
         </div>
 
@@ -144,24 +155,30 @@ export default function Settings() {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between p-4 bg-cyber-darker rounded-lg">
               <div>
                 <p className="text-white font-medium mb-1">默认公开新成就</p>
-                <p className="text-sm text-gray-400">新建成就时的默认可见性</p>
+                <p className="text-sm text-gray-400">
+                  新建成就时自动设为公开显示
+                </p>
               </div>
               <button
                 onClick={() =>
                   updateSettings({
-                    defaultPlatform: settings.defaultPlatform === 'all' ? 'pc' : 'all',
+                    defaultPublic: !settings.defaultPublic,
                   })
                 }
-                className={`w-12 h-6 rounded-full transition-colors flex items-center ${
-                  settings.defaultPlatform === 'all'
+                className={`relative w-14 h-7 rounded-full transition-colors flex items-center ${
+                  settings.defaultPublic
                     ? 'bg-neon-cyan justify-end'
                     : 'bg-gray-600 justify-start'
                 }`}
               >
-                <div className="w-5 h-5 bg-white rounded-full mx-0.5" />
+                <div className="w-6 h-6 bg-white rounded-full mx-0.5 transition-transform flex items-center justify-center">
+                  {settings.defaultPublic ? (
+                    <Check className="w-3 h-3 text-cyber-darker" />
+                  ) : null}
+                </div>
               </button>
             </div>
 
@@ -176,6 +193,15 @@ export default function Settings() {
                 共有 {achievements.length} 个成就，其中 {hiddenAchievements} 个对他人隐藏
               </p>
             </div>
+
+            <div className="bg-cyber-darker rounded-lg p-4">
+              <p className="text-white font-medium mb-2">隐私说明</p>
+              <ul className="text-sm text-gray-400 space-y-1">
+                <li>• 公开的成就会被其他玩家看到</li>
+                <li>• 隐藏的成就仅自己可见</li>
+                <li>• 可以在成就详情中随时切换可见性</li>
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -186,29 +212,33 @@ export default function Settings() {
           </div>
 
           <div className="space-y-4">
-            <div>
-              <p className="text-white font-medium mb-1">导出统计数据</p>
-              <p className="text-sm text-gray-400 mb-3">
-                在分享卡片中包含你的成就统计
-              </p>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.exportIncludeStats}
-                  onChange={(e) =>
-                    updateSettings({ exportIncludeStats: e.target.checked })
-                  }
-                  className="w-4 h-4 rounded border-white/20 bg-cyber-darker text-neon-cyan focus:ring-neon-cyan"
-                />
-                <span className="text-gray-300">显示成就总数和稀有度分布</span>
-              </label>
+            <div className="flex items-center justify-between p-4 bg-cyber-darker rounded-lg">
+              <div>
+                <p className="text-white font-medium mb-1">导出统计数据</p>
+                <p className="text-sm text-gray-400">
+                  在分享卡片中包含成就统计
+                </p>
+              </div>
+              <button
+                onClick={() =>
+                  updateSettings({ exportIncludeStats: !settings.exportIncludeStats })
+                }
+                className={`relative w-14 h-7 rounded-full transition-colors flex items-center ${
+                  settings.exportIncludeStats
+                    ? 'bg-neon-cyan justify-end'
+                    : 'bg-gray-600 justify-start'
+                }`}
+              >
+                <div className="w-6 h-6 bg-white rounded-full mx-0.5 transition-transform flex items-center justify-center">
+                  {settings.exportIncludeStats ? (
+                    <Check className="w-3 h-3 text-cyber-darker" />
+                  ) : null}
+                </div>
+              </button>
             </div>
 
             <div className="pt-4 border-t border-white/10">
-              <button
-                onClick={handleExportAll}
-                className="btn-cyber w-full mb-3"
-              >
+              <button onClick={handleExportAll} className="btn-cyber w-full mb-3">
                 <Download className="w-4 h-4 inline mr-2" />
                 导出所有数据
               </button>
@@ -230,10 +260,7 @@ export default function Settings() {
             <p className="text-sm text-gray-400 mb-3">
               删除所有游戏、成就、截图和设置。此操作不可撤销。
             </p>
-            <button
-              onClick={handleClearData}
-              className="px-6 py-3 rounded-lg font-semibold transition-all bg-red-500 text-white hover:bg-red-600"
-            >
+            <button onClick={handleClearData} className="px-6 py-3 rounded-lg font-semibold transition-all bg-red-500 text-white hover:bg-red-600">
               清除所有数据
             </button>
           </div>

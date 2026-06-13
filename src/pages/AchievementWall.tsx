@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Filter, Search } from 'lucide-react';
+import { Plus, Filter, Search, Download } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useFilteredAchievements } from '@/hooks/useData';
 import { getYearsRange } from '@/utils/dateUtils';
@@ -8,6 +8,7 @@ import type { Achievement, Platform, Rarity } from '@/types';
 import AchievementCard from '@/components/Achievement/AchievementCard';
 import AchievementModal from '@/components/Achievement/AchievementModal';
 import AchievementForm from '@/components/Achievement/AchievementForm';
+import ExportCard from '@/components/Export/ExportCard';
 
 export default function AchievementWall() {
   const { achievements, addAchievement, updateAchievement } = useAppStore();
@@ -19,6 +20,7 @@ export default function AchievementWall() {
   const [yearFilter, setYearFilter] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [showExportPreview, setShowExportPreview] = useState(false);
 
   const filteredAchievements = useFilteredAchievements(
     platformFilter,
@@ -37,11 +39,15 @@ export default function AchievementWall() {
 
   const handleExport = async () => {
     try {
-      setSelectedAchievement(null);
-      await exportToImage('achievement-export-card', '成就卡片.png');
+      setShowExportPreview(true);
+      setTimeout(async () => {
+        await exportToImage('export-card', '个人成就卡片.png');
+        setShowExportPreview(false);
+      }, 100);
     } catch (error) {
       console.error('Export failed:', error);
       alert('导出失败');
+      setShowExportPreview(false);
     }
   };
 
@@ -75,6 +81,15 @@ export default function AchievementWall() {
               <Filter className="w-4 h-4" />
               <span className="hidden sm:inline">筛选</span>
             </button>
+            {achievements.length > 0 && (
+              <button
+                onClick={handleExport}
+                className="btn-cyber-outline flex items-center gap-2 text-neon-purple border-neon-purple hover:bg-neon-purple hover:text-white"
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">导出卡片</span>
+              </button>
+            )}
             <button
               onClick={() => setShowForm(true)}
               className="btn-cyber flex items-center gap-2"
@@ -236,54 +251,41 @@ export default function AchievementWall() {
         />
       )}
 
-      <div id="achievement-export-card" className="hidden">
-        <div className="bg-cyber-dark p-8 rounded-xl" style={{ width: '600px' }}>
-          <div className="text-center mb-6">
-            <h1 className="font-cyber text-2xl font-bold text-gradient mb-2">
-              游戏成就卡
-            </h1>
-          </div>
-          {selectedAchievement && (
-            <div className="bg-cyber-card rounded-xl p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-neon-cyan to-neon-purple flex items-center justify-center">
-                  <span className="text-3xl">🏆</span>
-                </div>
-                <div className="flex-1">
-                  <h2 className="font-semibold text-xl text-white mb-1">
-                    {selectedAchievement.name}
-                  </h2>
-                  <p className="text-gray-400 text-sm mb-2">
-                    {selectedAchievement.description}
-                  </p>
-                  <div className="flex gap-2">
-                    <span
-                      className={`badge-rarity bg-gradient-to-r ${
-                        selectedAchievement.rarity === 'legendary'
-                          ? 'from-amber-500 to-orange-600'
-                          : selectedAchievement.rarity === 'epic'
-                          ? 'from-purple-600 to-violet-700'
-                          : selectedAchievement.rarity === 'rare'
-                          ? 'from-cyan-400 to-blue-500'
-                          : 'from-gray-500 to-gray-600'
-                      }`}
-                    >
-                      {selectedAchievement.rarity}
-                    </span>
-                  </div>
-                </div>
+      {showExportPreview && (
+        <div className="modal-overlay" onClick={() => setShowExportPreview(false)}>
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-full max-w-3xl my-8 animate-scale-in">
+              <div className="bg-cyber-darker rounded-2xl p-4 mb-4 flex items-center justify-between">
+                <h3 className="text-white font-semibold">个人成就卡片预览</h3>
+                <button
+                  onClick={() => setShowExportPreview(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  ✕
+                </button>
               </div>
-              {selectedAchievement.notes && (
-                <div className="mt-4 pt-4 border-t border-white/10">
-                  <p className="text-gray-300 text-sm">{selectedAchievement.notes}</p>
-                </div>
-              )}
+              <div className="max-h-[70vh] overflow-y-auto scrollbar-cyber">
+                <ExportCard />
+              </div>
+              <div className="bg-cyber-darker rounded-2xl p-4 mt-4 flex justify-center gap-3">
+                <button
+                  onClick={handleExport}
+                  className="btn-cyber flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  下载图片
+                </button>
+              </div>
             </div>
-          )}
-          <div className="mt-6 text-center text-gray-500 text-sm">
-            <p>由成就墙小程序生成</p>
           </div>
         </div>
+      )}
+
+      <div className="hidden">
+        <ExportCard />
       </div>
     </div>
   );

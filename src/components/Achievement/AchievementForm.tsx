@@ -23,7 +23,7 @@ export default function AchievementForm({
   onClose,
   onSubmit,
 }: AchievementFormProps) {
-  const { games } = useAppStore();
+  const { games, addMedia, settings } = useAppStore();
   const [formData, setFormData] = useState({
     gameId: achievement?.gameId || '',
     name: achievement?.name || '',
@@ -34,7 +34,7 @@ export default function AchievementForm({
     rarity: achievement?.rarity || ('common' as Rarity),
     notes: achievement?.notes || '',
     isPinned: achievement?.isPinned || false,
-    isPublic: achievement?.isPublic ?? true,
+    isPublic: achievement?.isPublic ?? settings.defaultPublic,
     media: achievement?.media || [],
   });
 
@@ -78,8 +78,18 @@ export default function AchievementForm({
       return;
     }
 
+    const achievementId = achievement?.id || generateId();
+    
+    formData.media.forEach((media) => {
+      addMedia({
+        ...media,
+        id: media.id || generateId(),
+        relatedAchievementId: achievementId,
+      });
+    });
+
     const newAchievement: Achievement = {
-      id: achievement?.id || generateId(),
+      id: achievementId,
       gameId: formData.gameId,
       name: formData.name,
       description: formData.description || undefined,

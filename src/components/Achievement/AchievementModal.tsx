@@ -17,9 +17,10 @@ export default function AchievementModal({
   onEdit,
   onExport,
 }: AchievementModalProps) {
-  const { getGameById, togglePinAchievement, togglePublicAchievement, deleteAchievement } =
+  const { getGameById, togglePinAchievement, togglePublicAchievement, deleteAchievement, media } =
     useAppStore();
   const game = getGameById(achievement.gameId);
+  const achievementMedia = media.filter((m) => m.relatedAchievementId === achievement.id);
 
   const handleDelete = () => {
     if (confirm('确定要删除这个成就吗？')) {
@@ -92,16 +93,17 @@ export default function AchievementModal({
           </div>
         )}
 
-        {achievement.media.length > 0 && (
+        {achievementMedia.length > 0 && (
           <div className="mb-6">
             <h3 className="text-sm font-semibold text-gray-400 mb-2">相关截图</h3>
             <div className="grid grid-cols-3 gap-2">
-              {achievement.media.map((media) => (
+              {achievementMedia.map((mediaItem) => (
                 <img
-                  key={media.id}
-                  src={media.url}
+                  key={mediaItem.id}
+                  src={mediaItem.url}
                   alt=""
-                  className="w-full h-24 object-cover rounded-lg"
+                  className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => window.open(mediaItem.url, '_blank')}
                 />
               ))}
             </div>

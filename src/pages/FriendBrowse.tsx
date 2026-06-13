@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Heart, MessageCircle, Bookmark, Send } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Heart, MessageCircle, Bookmark, Send, Filter } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatTimeAgo, generateId } from '@/utils/dateUtils';
 import { mockFriendPosts } from '@/data/mockData';
@@ -17,8 +17,19 @@ export default function FriendBrowse() {
 
   const [newComment, setNewComment] = useState<Record<string, string>>({});
   const [showComment, setShowComment] = useState<string | null>(null);
+  const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false);
 
-  const displayPosts = friendPosts.length > 0 ? friendPosts : mockFriendPosts;
+  const displayPosts = useMemo(() => {
+    let posts = friendPosts.length > 0 ? friendPosts : mockFriendPosts;
+    
+    if (showBookmarkedOnly) {
+      posts = posts.filter((post) => bookmarkedFriends.includes(post.friendId));
+    }
+    
+    return posts.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [friendPosts, showBookmarkedOnly, bookmarkedFriends]);
 
   const handleLike = (postId: string) => {
     if (friendPosts.some((p) => p.id === postId)) {
@@ -51,11 +62,7 @@ export default function FriendBrowse() {
   };
 
   const handleBookmark = (friendId: string) => {
-    if (bookmarkedFriends.includes(friendId)) {
-      toggleBookmarkFriend(friendId);
-    } else {
-      toggleBookmarkFriend(friendId);
-    }
+    toggleBookmarkFriend(friendId);
   };
 
   const isBookmarked = (friendId: string) => bookmarkedFriends.includes(friendId);
@@ -63,12 +70,33 @@ export default function FriendBrowse() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="font-cyber text-3xl font-bold text-gradient mb-2">
-          好友浏览
-        </h1>
-        <p className="text-gray-400">
-          发现好友的精彩成就和分享
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div>
+            <h1 className="font-cyber text-3xl font-bold text-gradient mb-2">
+              好友浏览
+            </h1>
+            <p className="text-gray-400">
+              发现好友的精彩成就和分享
+            </p>
+          </div>
+
+          <button
+            onClick={() => setShowBookmarkedOnly(!showBookmarkedOnly)}
+            className={`btn-cyber-outline flex items-center gap-2 ${
+              showBookmarkedOnly ? 'border-neon-gold text-neon-gold bg-neon-gold/10' : ''
+            }`}
+          >
+            <Bookmark className={`w-4 h-4 ${showBookmarkedOnly ? 'fill-current' : ''}`} />
+            <span>{showBookmarkedOnly ? '只看收藏' : '全部动态'}</span>
+          </button>
+        </div>
+
+        {bookmarkedFriends.length > 0 && (
+          <div className="flex items-center gap-2 text-sm text-gray-400">
+            <Filter className="w-4 h-4" />
+            <span>已收藏 {bookmarkedFriends.length} 位好友</span>
+          </div>
+        )}
       </div>
 
       <div className="space-y-6">
@@ -135,7 +163,11 @@ export default function FriendBrowse() {
 
                 <button
                   onClick={() => setShowComment(showComment === post.id ? null : post.id)}
-                  className="flex items-center gap-2 text-gray-400 hover:text-neon-cyan transition-colors"
+                  className={`flex items-center gap-2 transition-colors ${
+                    showComment === post.id
+                      ? 'text-neon-cyan'
+                      : 'text-gray-400 hover:text-neon-cyan'
+                  }`}
                 >
                   <MessageCircle className="w-5 h-5" />
                   <span className="text-sm">{comments.length}</span>
@@ -204,9 +236,23 @@ export default function FriendBrowse() {
 
       {displayPosts.length === 0 && (
         <div className="text-center py-16">
-          <div className="text-6xl mb-4">👥</div>
-          <h3 className="text-xl font-semibold text-white mb-2">暂无好友动态</h3>
-          <p className="text-gray-400">关注更多玩家，发现精彩内容</p>
+          <div className="text-6xl mb-4">
+            {showBookmarkedOnly ? '�' : '�👥'}
+          </div>
+          <h3 className="text-xl font-semibold text-white mb-2">
+            {showBookmarkedOnly ? '暂无收藏好友动态' : '暂无好友动态'}
+          </h3>
+          <p className="text-gray-400">
+            {showBookmarkedOnly ? '去关注更多玩家吧' : '关注更多玩家，发现精彩内容'}
+          </p>
+          {showBookmarkedOnly && (
+            <button
+              onClick={() => setShowBookmarkedOnly(false)}
+              className="btn-cyber mt-4"
+            >
+              查看全部动态
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
+import { useThemeStore } from '@/store/useThemeStore';
 import Sidebar from '@/components/Layout/Sidebar';
 import BottomNav from '@/components/Layout/BottomNav';
 import TopNav from '@/components/Layout/TopNav';
@@ -12,6 +13,12 @@ import Settings from '@/pages/Settings';
 
 export default function App() {
   const { user, games, achievements } = useAppStore();
+  const { theme } = useThemeStore();
+
+  useEffect(() => {
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
+  }, [theme]);
 
   useEffect(() => {
     console.log('App loaded with:', {
