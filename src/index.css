@@ -1,0 +1,192 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@layer components {
+  .btn-cyber {
+    @apply px-6 py-3 rounded-lg font-semibold transition-all duration-300;
+    @apply bg-gradient-to-r from-neon-cyan to-cyan-400;
+    @apply text-cyber-darker font-medium;
+    @apply hover:shadow-neon hover:scale-105;
+    @apply active:scale-95;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
+  }
+
+  .btn-cyber-outline {
+    @apply px-6 py-3 rounded-lg font-semibold transition-all duration-300;
+    @apply border-2 border-neon-cyan text-neon-cyan;
+    @apply hover:bg-neon-cyan hover:text-cyber-darker;
+    @apply hover:shadow-neon;
+  }
+
+  .card-cyber {
+    @apply bg-cyber-card backdrop-blur-md rounded-xl p-6;
+    @apply border border-white/10;
+    @apply shadow-lg;
+    @apply transition-all duration-300;
+    @apply hover:-translate-y-1 hover:shadow-neon;
+  }
+
+  .input-cyber {
+    @apply w-full px-4 py-3 rounded-lg;
+    @apply bg-cyber-darker border border-white/20;
+    @apply text-white placeholder-gray-400;
+    @apply focus:outline-none focus:border-neon-cyan focus:shadow-neon;
+    @apply transition-all duration-300;
+  }
+
+  .badge-rarity {
+    @apply px-3 py-1 rounded-full text-xs font-semibold text-white;
+  }
+
+  .badge-legendary {
+    @apply bg-gradient-to-r from-amber-500 to-orange-600 shadow-neon-gold;
+  }
+
+  .badge-epic {
+    @apply bg-gradient-to-r from-purple-600 to-violet-700 shadow-neon-purple;
+  }
+
+  .badge-rare {
+    @apply bg-gradient-to-r from-cyan-400 to-blue-500 shadow-neon;
+  }
+
+  .badge-common {
+    @apply bg-gradient-to-r from-gray-500 to-gray-600;
+  }
+
+  .nav-link {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg;
+    @apply text-gray-300 hover:text-neon-cyan hover:bg-white/5;
+    @apply transition-all duration-300;
+  }
+
+  .nav-link-active {
+    @apply text-neon-cyan bg-neon-cyan/10 border-l-2 border-neon-cyan;
+  }
+
+  .glass-effect {
+    @apply bg-cyber-card backdrop-blur-lg;
+    @apply border border-white/10;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent;
+  }
+
+  .glow-border {
+    @apply relative;
+  }
+
+  .glow-border::before {
+    content: '';
+    @apply absolute inset-0 rounded-xl;
+    @apply bg-gradient-to-r from-neon-cyan to-neon-purple;
+    @apply opacity-50 blur-sm;
+    z-index: -1;
+  }
+}
+
+@layer utilities {
+  .scrollbar-cyber {
+    scrollbar-width: thin;
+    scrollbar-color: #00fff5 #1a1a2e;
+  }
+
+  .scrollbar-cyber::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-cyber::-webkit-scrollbar-track {
+    background: #1a1a2e;
+    border-radius: 4px;
+  }
+
+  .scrollbar-cyber::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #00fff5, #9d4edd);
+    border-radius: 4px;
+  }
+
+  .scrollbar-cyber::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #00fff5, #00fff5);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-overlay {
+  @apply fixed inset-0 bg-black/80 backdrop-blur-sm z-40;
+}
+
+.modal-content {
+  @apply fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+  @apply bg-cyber-card backdrop-blur-xl rounded-2xl;
+  @apply border border-white/10;
+  @apply shadow-2xl z-50;
+  @apply max-w-2xl w-full max-h-[90vh] overflow-y-auto;
+  @apply animate-scale-in;
+}
